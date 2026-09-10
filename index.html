@@ -287,10 +287,11 @@ html, body {
 .view.active { display: block; }
 .view-home {
   min-height: 100vh;
+  min-height: 100dvh;
   display: flex; flex-direction: column; align-items: center; justify-content: center;
-  gap: 28px; padding: 24px 16px;
+  padding: 24px 16px;
 }
-.home-brand { text-align: center; }
+.home-brand { text-align: center; margin-bottom: 48px; }
 .home-brand .logo { font-size: 34px; letter-spacing: 3px; }
 .entry-card { cursor: pointer; }
 </style>
@@ -25690,11 +25691,12 @@ var HanziLookup=HanziLookup||{};HanziLookup.SubStroke=function(t,i,n,o){"use str
       var groups = [];
       readings.forEach(function(r){
         var words = [];
-        pool.forEach(function(w){
-          var i = w.indexOf(char); if (i<0) return;
+        for (var k = 0; k < pool.length; k++){
+          var w = pool[k];
+          var i = w.indexOf(char); if (i<0) continue;
           var arr = PINYIN().pinyin(w, {toneType:'symbol', type:'array'});
-          if (arr[i] === r) { words.push({word:w, pinyin:api.getPinyin(w)}); if (words.length>=limitPer) return; }
-        });
+          if (arr[i] === r) { words.push({word:w, pinyin:api.getPinyin(w)}); if (words.length>=limitPer) break; }
+        }
         if (words.length) groups.push({ pinyin:r, words:words });
       });
       return groups;
