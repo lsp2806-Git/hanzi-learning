@@ -298,6 +298,25 @@ html, body {
 .home-brand { text-align: center; margin-bottom: 48px; }
 .home-brand .logo { font-size: 34px; letter-spacing: 3px; }
 .entry-card { cursor: pointer; }
+.download-link {
+  margin-top: 36px; font-size: 14px; color: var(--muted);
+  text-decoration: none; border: 1px solid var(--chip-border);
+  background: #fff; padding: 10px 16px; border-radius: 12px;
+}
+.download-link:active { transform: scale(.97); }
+@media (max-width: 560px) {
+  .home-brand .logo { font-size: 28px; }
+  .home-grid { gap: 14px; }
+  .entry-card { padding: 22px 12px; }
+  .entry-emoji { font-size: 44px; }
+  .entry-name { font-size: 22px; }
+  .result-char { font-size: 38px; }
+  .result-pinyin { font-size: 18px; }
+  .tianzige { width: 240px; height: 240px; }
+  .practice-controls { gap: 8px; }
+  .speed-label input { width: 90px; }
+  .container { padding: 12px 10px 32px; }
+}
 </style>
 </head>
 <body>
@@ -316,6 +335,7 @@ html, body {
         <div class="entry-name">练一练</div>
       </a>
     </div>
+    <a class="download-link" href="index.html" download="index.html">⬇ 下载此单文件（index.html）</a>
   </div>
 
   <!-- 查询 -->
@@ -327,26 +347,11 @@ html, body {
     </header>
     <main class="container">
       <section class="card search-card">
-        <div class="tabs" role="tablist">
-          <button class="tab active" data-mode="keyboard" role="tab">⌨️ 键盘输入</button>
-          <button class="tab" data-mode="handwrite" role="tab">✍️ 手写输入</button>
-        </div>
         <div class="mode-panel" id="panel-keyboard-q">
           <div class="search-row">
             <input id="search-input" type="text" inputmode="text" autocomplete="off" placeholder="例如：好、苹果、一丝不苟" />
             <button id="search-btn" class="btn-primary">🔍 查询</button>
           </div>
-        </div>
-        <div class="mode-panel hidden" id="panel-handwrite-q">
-          <div class="handwrite-wrap">
-            <canvas id="hw-canvas-q" class="hw-canvas" width="360" height="360"></canvas>
-            <div class="hw-tools">
-              <button id="hw-canvas-q-undo" class="btn-mini">↩ 撤销</button>
-              <button id="hw-canvas-q-clear" class="btn-mini">🗑 清空</button>
-            </div>
-          </div>
-          <p class="hw-hint">在框里用鼠标或手指写出汉字，下方会显示识别结果 ✨</p>
-          <div id="hw-candidates-q" class="hw-candidates"></div>
         </div>
       </section>
       <section class="card results-card">
@@ -365,26 +370,11 @@ html, body {
     </header>
     <main class="container">
       <section class="card search-card">
-        <div class="tabs" role="tablist">
-          <button class="tab active" data-mode="keyboard" role="tab">⌨️ 键盘输入</button>
-          <button class="tab" data-mode="handwrite" role="tab">✍️ 手写输入</button>
-        </div>
         <div class="mode-panel" id="panel-keyboard-p">
           <div class="search-row">
             <input id="practice-input" type="text" maxlength="1" inputmode="text" autocomplete="off" placeholder="输入一个汉字" />
             <button id="practice-load" class="btn-primary">显示笔顺</button>
           </div>
-        </div>
-        <div class="mode-panel hidden" id="panel-handwrite-p">
-          <div class="handwrite-wrap">
-            <canvas id="hw-canvas-p" class="hw-canvas" width="360" height="360"></canvas>
-            <div class="hw-tools">
-              <button id="hw-canvas-p-undo" class="btn-mini">↩ 撤销</button>
-              <button id="hw-canvas-p-clear" class="btn-mini">🗑 清空</button>
-            </div>
-          </div>
-          <p class="hw-hint">在框里用鼠标或手指写出汉字，下方点一下即可练写 ✨</p>
-          <div id="hw-candidates-p" class="hw-candidates"></div>
         </div>
       </section>
       <section class="card practice-card">
@@ -25808,53 +25798,6 @@ var HanziLookup=HanziLookup||{};HanziLookup.SubStroke=function(t,i,n,o){"use str
     qStatus.textContent = r ? '' : '没有找到相关内容，换个词试试～';
   }
 
-  function createHandwrite(canvasId, candId, onSelect){
-    var canvas = document.getElementById(canvasId);
-    var box = document.getElementById(candId);
-    var ctx = canvas.getContext('2d');
-    var SIZE = 360;
-    canvas.width = SIZE; canvas.height = SIZE;
-    ctx.lineWidth = 6; ctx.lineCap = 'round'; ctx.lineJoin = 'round'; ctx.strokeStyle = '#1f3a5f';
-    var strokes = [], current = null, drawing = false, initialized = false;
-    function toPx(p){ return [p[0]*SIZE, p[1]*SIZE]; }
-    function pos(e){ var rect = canvas.getBoundingClientRect(); var p = (e.touches ? e.touches[0] : e); return { x:(p.clientX-rect.left)/rect.width, y:(p.clientY-rect.top)/rect.height }; }
-    function redraw(a,b){ if(a&&b){ var A=toPx(a),B=toPx(b); ctx.beginPath(); ctx.moveTo(A[0],A[1]); ctx.lineTo(B[0],B[1]); ctx.stroke(); } }
-    function render(){ ctx.clearRect(0,0,SIZE,SIZE); var all = strokes.concat(current?[current]:[]); all.forEach(function(s){ ctx.beginPath(); s.forEach(function(p,i){ var P=toPx(p); if(i) ctx.lineTo(P[0],P[1]); else ctx.moveTo(P[0],P[1]); }); ctx.stroke(); }); }
-    function undo(){ strokes.pop(); render(); }
-    function clearAll(){ strokes=[]; current=null; render(); box.innerHTML=''; }
-    function recognize(){
-      if (!initialized || strokes.length===0) { box.innerHTML=''; return; }
-      try {
-        var analyzed = new HanziLookup.AnalyzedCharacter(strokes);
-        new HanziLookup.Matcher('mmah').match(analyzed, 10, function(matches){
-          box.innerHTML = '';
-          (matches||[]).forEach(function(m){
-            var b = document.createElement('button'); b.className='cand'; b.textContent = m.character;
-            b.onclick = function(){ if (onSelect) onSelect(m.character); };
-            box.appendChild(b);
-          });
-          if (!matches || matches.length===0) box.innerHTML = '<span class="no-data">没认出来，再写清楚一点试试～</span>';
-        });
-      } catch(e){ box.innerHTML = '<span class="no-data">识别出错，请重试</span>'; }
-    }
-    var down = function(e){ e.preventDefault(); drawing=true; current=[pos(e)]; };
-    var move = function(e){ if(!drawing) return; e.preventDefault(); var p=pos(e); var last=current[current.length-1]; if(!last||Math.hypot(p.x-last[0],p.y-last[1])>0.01){ current.push(p); redraw(last,p); } };
-    var up = function(e){ if(!drawing) return; e.preventDefault(); drawing=false; if(current&&current.length>1) strokes.push(current); current=null; recognize(); };
-    canvas.addEventListener('mousedown', down);
-    canvas.addEventListener('mousemove', move);
-    window.addEventListener('mouseup', up);
-    canvas.addEventListener('touchstart', down, {passive:false});
-    canvas.addEventListener('touchmove', move, {passive:false});
-    canvas.addEventListener('touchend', up, {passive:false});
-    var u = document.getElementById(canvasId+'-undo'); var c = document.getElementById(canvasId+'-clear');
-    if (u) u.addEventListener('click', undo);
-    if (c) c.addEventListener('click', clearAll);
-    var pending = 2;
-    var done = function(){ if(--pending===0) initialized = true; };
-    HanziLookup.init('mmah', 'lib/data/mmah.json', done);
-    HanziLookup.init('orig', 'lib/data/orig.json', done);
-  }
-
   var Writer = (function(){
     var writer=null, strokeCount=0, speed=0.5, current='';
     function info(){ return document.getElementById('stroke-info'); }
@@ -25904,27 +25847,6 @@ var HanziLookup=HanziLookup||{};HanziLookup.SubStroke=function(t,i,n,o){"use str
     await Dict.init();
     qStatus.textContent = '请输入要查询的汉字、词语或成语 👆';
     var pInput = document.getElementById('practice-input');
-    createHandwrite('hw-canvas-q', 'hw-candidates-q', function(ch){ qInput.value=ch; doSearch(ch); });
-    createHandwrite('hw-canvas-p', 'hw-candidates-p', function(ch){ pInput.value=ch; Writer.loadChar(ch); });
-
-    document.querySelectorAll('.view-query .tab').forEach(function(t){
-      t.addEventListener('click', function(){
-        document.querySelectorAll('.view-query .tab').forEach(function(x){ x.classList.remove('active'); });
-        t.classList.add('active');
-        var m=t.dataset.mode;
-        document.getElementById('panel-keyboard-q').classList.toggle('hidden', m!=='keyboard');
-        document.getElementById('panel-handwrite-q').classList.toggle('hidden', m!=='handwrite');
-      });
-    });
-    document.querySelectorAll('.view-practice .tab').forEach(function(t){
-      t.addEventListener('click', function(){
-        document.querySelectorAll('.view-practice .tab').forEach(function(x){ x.classList.remove('active'); });
-        t.classList.add('active');
-        var m=t.dataset.mode;
-        document.getElementById('panel-keyboard-p').classList.toggle('hidden', m!=='keyboard');
-        document.getElementById('panel-handwrite-p').classList.toggle('hidden', m!=='handwrite');
-      });
-    });
 
     document.getElementById('search-btn').addEventListener('click', function(){ doSearch(qInput.value); });
     qInput.addEventListener('keydown', function(e){ if(e.key==='Enter') doSearch(qInput.value); });
