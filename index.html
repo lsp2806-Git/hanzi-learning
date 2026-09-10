@@ -285,7 +285,7 @@ html, body {
 
 .view { display: none; }
 .view.active { display: block; }
-.view-home {
+.view-home.active {
   min-height: 100vh;
   min-height: 100dvh;
   width: 100%;
@@ -298,12 +298,6 @@ html, body {
 .home-brand { text-align: center; margin-bottom: 48px; }
 .home-brand .logo { font-size: 34px; letter-spacing: 3px; }
 .entry-card { cursor: pointer; }
-.download-link {
-  margin-top: 36px; font-size: 14px; color: var(--muted);
-  text-decoration: none; border: 1px solid var(--chip-border);
-  background: #fff; padding: 10px 16px; border-radius: 12px;
-}
-.download-link:active { transform: scale(.97); }
 @media (max-width: 560px) {
   .home-brand .logo { font-size: 28px; }
   .home-grid { gap: 14px; }
@@ -335,7 +329,6 @@ html, body {
         <div class="entry-name">练一练</div>
       </a>
     </div>
-    <a class="download-link" href="index.html" download="index.html">⬇ 下载此单文件（index.html）</a>
   </div>
 
   <!-- 查询 -->
